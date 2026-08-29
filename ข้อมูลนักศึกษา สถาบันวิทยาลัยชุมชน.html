@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard นักศึกษา สถาบันวิทยาลัยชุมชน</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Tahoma,Arial,sans-serif;background:#f0f4f8;color:#2c3e50;font-size:14px;min-width:320px}
+
+/* === HEADER === */
+.hdr{background:linear-gradient(135deg,#1a3a5c 0%,#2471a3 100%);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.3);flex-wrap:nowrap}
+.hdr-date{font-size:11px;opacity:.9;padding:4px 14px 4px 0;border-right:1px solid rgba(255,255,255,.35);margin-right:2px;min-width:110px;text-align:center;line-height:1.6;flex-shrink:0}
+.hdr-icon{width:42px;height:42px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.hdr-text{min-width:0;flex:1}
+.hdr h1{font-size:clamp(13px,2.2vw,18px);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr p{font-size:11px;opacity:.85;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* === FILTER BAR === */
+.fbar{background:#fff;padding:10px 24px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;border-bottom:2px solid #dce6f1;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.fbar label{display:block;font-size:11px;color:#7f8c8d;font-weight:600;margin-bottom:3px;white-space:nowrap}
+.fbar select{padding:5px 8px;border:1px solid #bdc3c7;border-radius:6px;font-size:13px;background:#fff;cursor:pointer;width:100%;min-width:110px}
+.fbar select:focus{outline:none;border-color:#2471a3}
+.fbar>div{flex:1 1 130px}
+.yr-rng{display:flex;align-items:flex-end;gap:4px;flex:1 1 220px}
+.yr-rng>div{flex:1}
+.yr-rng span{padding-bottom:6px;color:#95a5a6;font-size:12px}
+.btn{padding:6px 16px;background:#2471a3;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;align-self:flex-end}
+.btn:hover{background:#1a5276}
+.fstat{font-size:11px;color:#95a5a6;padding-bottom:2px;align-self:flex-end;white-space:nowrap;flex-shrink:0}
+
+/* === KPI ROW === */
+.krow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:12px 24px}
+.kpi{background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid #2471a3}
+.kpi.g{border-left-color:#27ae60}.kpi.b{border-left-color:#2980b9}.kpi.r{border-left-color:#c0392b}.kpi.p{border-left-color:#8e44ad}
+.klab{font-size:10px;color:#7f8c8d;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.kval{font-size:clamp(18px,2.5vw,26px);font-weight:700;color:#1a3a5c;margin:3px 0;line-height:1}
+.ksub{font-size:11px;color:#95a5a6}
+.kfrm{font-size:10px;color:#bdc3c7;margin-top:3px;min-height:14px;line-height:1.3}
+
+/* === CONTENT GRID === */
+.grids{padding:12px 24px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.card{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card.fw{grid-column:1/-1}
+.card h3{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:2px}
+.card .sub{font-size:11px;color:#95a5a6;margin-bottom:8px;line-height:1.4}
+.cw{position:relative;width:100%}
+.cw canvas{max-width:100%;display:block}
+.sec{grid-column:1/-1;font-size:15px;font-weight:700;color:#1a3a5c;border-bottom:2px solid #2471a3;padding-bottom:5px;margin-top:4px}
+.footer{text-align:center;padding:12px 24px;font-size:11px;color:#95a5a6}
+
+/* === CHART HEIGHT CLASSES === */
+.ch-xl{height:500px}.ch-lg{height:300px}.ch-md{height:250px}.ch-sm{height:220px}.ch-xs{height:200px}
+
+/* === GRAD TABLES === */
+.gtbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
+.gtbl{border-collapse:collapse;font-size:12px;width:100%;min-width:420px}
+.gtbl th{background:#1a3a5c;color:#fff;padding:5px 9px;text-align:center;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:2}
+.gtbl td{border:1px solid #e8ecf0;padding:4px 8px;text-align:right;white-space:nowrap}
+.gtbl tr:nth-child(even) td{background:#f7fafc}
+.gtbl td.lbl{text-align:left;font-weight:600;background:#eaf1fb;color:#1a3a5c;position:sticky;left:0;z-index:1}
+.gtbl tr.tot-row td{background:#dce6f1;font-weight:700;color:#1a3a5c}
+.gtbl td.zero{color:#bdc3c7}
+.gtbl td.peak{background:#fff176!important;font-weight:700;color:#1a3a5c}
+
+/* === BREAKPOINT: TABLET (≤1100px) === */
+@media(max-width:1100px){
+  .krow{grid-template-columns:repeat(3,1fr)}
+  .kpi:nth-child(4),.kpi:nth-child(5){grid-column:auto}
+  .ch-xl{height:400px}
+}
+
+/* === BREAKPOINT: SMALL TABLET / LARGE MOBILE (≤768px) === */
+@media(max-width:768px){
+  .hdr{padding:10px 14px;gap:8px}
+  .hdr-date{display:none}
+  .hdr h1{font-size:14px}
+  .fbar{padding:8px 14px;gap:8px}
+  .fbar>div{flex:1 1 calc(50% - 8px)}
+  .yr-rng{flex:1 1 100%}
+  .fstat{display:none}
+  .krow{grid-template-columns:repeat(2,1fr);padding:10px 14px;gap:8px}
+  .kpi:first-child{grid-column:1/-1}
+  .grids{grid-template-columns:1fr;padding:10px 14px;gap:10px}
+  .card.fw{grid-column:1}
+  .ch-xl{height:320px}.ch-lg{height:240px}.ch-md{height:200px}.ch-sm{height:180px}.ch-xs{height:160px}
+  .footer{padding:10px 14px}
+}
+
+/* === BREAKPOINT: MOBILE (≤480px) === */
+@media(max-width:480px){
+  .hdr{padding:8px 12px}
+  .hdr-icon{width:32px;height:32px;font-size:15px}
+  .fbar{padding:8px 12px}
+  .fbar>div{flex:1 1 100%}
+  .yr-rng{flex:1 1 100%}
+  .krow{grid-template-columns:1fr 1fr;padding:8px 12px;gap:6px}
+  .kval{font-size:18px}
+  .grids{padding:8px 12px;gap:8px}
+  .card{padding:10px}
+  .card h3{font-size:12px}
+  .ch-xl{height:260px}.ch-lg{height:200px}.ch-md{height:170px}.ch-sm{height:150px}.ch-xs{height:140px}
+  .gtbl{font-size:10px}
+  .gtbl th,.gtbl td{padding:3px 5px}
+  .footer{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-date">ข้อมูล ณ วันที่<br><strong style="font-size:13px">8 เมษายน 2569</strong></div>
+  <div class="hdr-icon">&#127891;</div>
+  <div class="hdr-text">
+    <h1>Dashboard ข้อมูลนักศึกษา สถาบันวิทยาลัยชุมชน</h1>
+    <p id="hdr-sub">ปีการศึกษา 2564&#x2013;2568 | ข้อมูลแรกเข้าทุกวิทยาลัย ทุกระดับ</p>
+  </div>
+</div>
+
+<div class="fbar">
+  <div><label>ภาค</label><select id="f-region"><option value="">ทุกภาค</option><option>กลางและตะวันออก</option><option>เหนือ</option><option>ตะวันออกเฉียงเหนือ</option><option>ใต้</option></select></div>
+  <div><label>วิทยาลัย</label><select id="f-col"><option value="">ทุกวิทยาลัย</option></select></div>
+  <div><label>ระดับการศึกษา</label><select id="f-lv"><option value="">ทุกระดับ</option><option>อนุปริญญา</option><option>ปวส.</option><option>ปวช.</option><option>ประกาศนียบัตร วชช.</option></select></div>
+  <div class="yr-rng">
+    <div><label>ปีจาก</label><select id="f-yfrom"></select></div>
+    <span>&#x2013;</span>
+    <div><label>ปีถึง</label><select id="f-yto"></select></div>
+  </div>
+  <button class="btn" onclick="resetFilters()">&#x21BA; รีเซ็ต</button>
+  <div class="fstat" id="fstat"></div>
+</div>
+
+<div class="krow">
+  <div class="kpi"><div class="klab">นักศึกษารวม</div><div class="kval" id="kv0">-</div><div class="ksub">คน (แรกเข้า)</div><div class="kfrm" id="kf0"></div></div>
+  <div class="kpi g"><div class="klab">กำลังศึกษา</div><div class="kval" id="kv1">-</div><div class="ksub">คน</div><div class="kfrm" id="kf1"></div></div>
+  <div class="kpi b"><div class="klab">สำเร็จการศึกษา</div><div class="kval" id="kv2">-</div><div class="ksub">คน</div><div class="kfrm" id="kf2"></div></div>
+  <div class="kpi r"><div class="klab">พ้นสภาพ</div><div class="kval" id="kv3">-</div><div class="ksub">คน</div><div class="kfrm" id="kf3"></div></div>
+  <div class="kpi p"><div class="klab">สัดส่วนหญิง</div><div class="kval" id="kv4">-</div><div class="ksub">%</div><div class="kfrm" id="kf4"></div></div>
+</div>
+
+<div class="grids">
+  <div class="sec">&#128200; แนวโน้มนักศึกษาแรกเข้า</div>
+  <div class="card fw"><h3>จำนวนนักศึกษาแรกเข้ารายปีการศึกษา (แยกตามระดับการศึกษา)</h3>
+    <div class="sub">เฉพาะปีการศึกษาที่เลือก | แต่ละสีแสดงระดับการศึกษา</div>
+    <div class="cw ch-md"><canvas id="chartTrend"></canvas></div></div>
+  <div class="card"><h3>สัดส่วนระดับการศึกษา</h3><div class="sub">ปีการศึกษาที่เลือก</div>
+    <div class="cw ch-xs"><canvas id="chartLvDonut"></canvas></div></div>
+  <div class="card"><h3>สถานะนักศึกษา</h3><div class="sub">ปีการศึกษาที่เลือก</div>
+    <div class="cw ch-xs"><canvas id="chartStDonut"></canvas></div></div>
+
+  <div class="sec">&#127982; ข้อมูลรายวิทยาลัย (รหัสตามที่นำเสนอผู้บริหาร)</div>
+  <div class="card fw"><h3>จำนวนนักศึกษารวมแยกตามวิทยาลัย (แบ่งตามระดับการศึกษา เรียง CE1&#x2013;S7)</h3>
+    <div class="sub">เรียงตามรหัส CE1&#x2013;S7 | &#x25A0; อนุปริญญา &#x25A0; ปวส. &#x25A0; ปวช. &#x25A0; ประกาศนียบัตร วชช.</div>
+    <div class="cw ch-xl"><canvas id="chartColBar"></canvas></div></div>
+  <div class="card fw"><h3>สถานะนักศึกษาแยกตามวิทยาลัย (เรียง CE1&#x2013;S7)</h3>
+    <div class="sub">กำลังศึกษา (เขียว) / สำเร็จการศึกษา (น้ำเงิน) / พ้นสภาพ (แดง)</div>
+    <div class="cw ch-xl"><canvas id="chartColSt"></canvas></div></div>
+
+  <div class="sec">&#128218; กลุ่มสาขาและการสำเร็จการศึกษา</div>
+  <div class="card fw"><h3>กลุ่มสาขาที่มีนักศึกษามากที่สุด Top 10</h3>
+    <div class="sub">ปีการศึกษา 2564&#x2013;2568 | &#x25A0; อนุปริญญา 3 ปี (เข้ม) &#x25A0; อนุปริญญา 2 ปี (อ่อน) &#x25A0; ปวส. (ส้ม) &#x25A0; ปวช. (ม่วง) | Top 10 รวมทุกหลักสูตรและระดับ</div>
+    <div class="cw ch-lg"><canvas id="chartTopProg"></canvas></div></div>
+  <div class="card fw" id="card-grad-t6">
+    <h3>การสำเร็จการศึกษาระดับอนุปริญญา จำแนกตามปีสำเร็จและปีรับเข้า (T6)</h3>
+    <div class="sub" id="sub-grad-t6">กรองตามวิทยาลัยที่เลือก | แถว = ปีที่สำเร็จ, คอลัมน์ = ปีที่รับเข้า</div>
+    <div id="tbl-grad-t6" class="gtbl-wrap"></div></div>
+  <div class="card" id="card-grad-t7">
+    <h3>การสำเร็จการศึกษาระดับ ปวส. (T7)</h3>
+    <div class="sub" id="sub-grad-t7">กรองตามวิทยาลัยที่เลือก</div>
+    <div id="tbl-grad-t7" class="gtbl-wrap"></div></div>
+  <div class="card" id="card-grad-t8">
+    <h3>การสำเร็จการศึกษาระดับ ปวช. (T8)</h3>
+    <div class="sub" id="sub-grad-t8">กรองตามวิทยาลัยที่เลือก</div>
+    <div id="tbl-grad-t8" class="gtbl-wrap"></div></div>
+
+  <div class="sec">&#127758; ภูมิภาคและเพศ</div>
+  <div class="card"><h3>สัดส่วนตามภูมิภาค</h3><div class="sub">ปีการศึกษาที่เลือก</div>
+    <div class="cw ch-sm"><canvas id="chartRegion"></canvas></div></div>
+  <div class="card"><h3>สัดส่วนเพศ</h3><div class="sub">ปีการศึกษาที่เลือก</div>
+    <div class="cw ch-sm"><canvas id="chartGender"></canvas></div></div>
+</div>
+
+<div class="footer">Dashboard ข้อมูลนักศึกษาสถาบันวิทยาลัยชุมชน | รหัสวิทยาลัยตาม T1&#x2013;T8 และ sheet เรียงวชช | ข้อมูล 21 วิทยาลัย ปีการศึกษา 2564&#x2013;2568 รวม 32,478 คน</div>
+
+<script>
+async function loadJsonFromTxt() {
+    try {
+        const response = await fetch("https://www.iccs.ac.th/wp-content/uploads/2026/06/Data-Dashboard-นักศึกษา-สถาบันวิทยาลัยช.txt");
+        const text = await response.text();
+
+        const V2 = JSON.parse(text);
+
+        console.log(data);
+        console.log("run");
+        return V2;
+    } catch (error) {
+        console.error("Error loading file:", error);
+    }
+}
+
+var V2 = loadJsonFromTxt();
+
+var COLS = {};
+V2.col_data.forEach(function(cd){ COLS[cd.col] = cd; });
+
+var C_ACT="#27ae60",C_GRAD="#2980b9",C_DROP="#c0392b";
+var C_ANU="#1a3a5c",C_PVS="#e67e22",C_PVC="#8e44ad",C_CERT="#16a085";
+var C_FEM="#e91e8c",C_MAL="#2196f3";
+var LV_ORDER=["อนุปริญญา","ปวส.","ปวช.","ประกาศนียบัตร วชช."];
+var LV_COLORS={"อนุปริญญา":C_ANU,"ปวส.":C_PVS,"ปวช.":C_PVC,"ประกาศนียบัตร วชช.":C_CERT};
+var REG_COLORS={"กลางและตะวันออก":"#3498db","เหนือ":"#27ae60","ตะวันออกเฉียงเหนือ":"#e67e22","ใต้":"#e74c3c"};
+var ENTRY_YRS=["63","64","65","66","67","68"];
+var COHORT_CLR=["#7f8c8d","#1a3a5c","#2471a3","#27ae60","#e67e22","#e74c3c"];
+var CHARTS={};
+
+function fmt(n){return Math.round(n).toLocaleString("th-TH");}
+function pct(a,b){return b>0?Math.round(a/b*1000)/10:0;}
+
+function colTotal(cd,yrs,lv){
+  if(!lv)return yrs.reduce(function(s,yr){return s+(cd.by_year[yr]||0);},0);
+  var tot=0;
+  for(var i=0;i<yrs.length;i++){
+    var yr=yrs[i];
+    if(cd.yr_lv&&cd.yr_lv[yr]){tot+=(cd.yr_lv[yr][lv]||0);}
+    else{var t=cd.by_year[yr]||0,f=cd.total_6468>0?(cd.lv[lv]||0)/cd.total_6468:0;tot+=Math.round(t*f);}
+  }
+  return tot;
+}
+
+function stTotal(cd,yrs,lv,stKey){
+  var tot=0;
+  for(var i=0;i<yrs.length;i++){
+    var yr=yrs[i];
+    if(cd.yr_st&&cd.yr_st[yr]){
+      var sv=cd.yr_st[yr][stKey]||0;
+      if(!lv){tot+=sv;}else{var f=cd.total_6468>0?(cd.lv[lv]||0)/cd.total_6468:0;tot+=Math.round(sv*f);}
+    }else{
+      var lt=colTotal(cd,[yr],lv),r=cd.total_6468>0?(cd.st[stKey]||0)/cd.total_6468:0;tot+=Math.round(lt*r);
+    }
+  }
+  return tot;
+}
+
+function sexTot(cd,yrs,lv,sx){
+  var lt=colTotal(cd,yrs,lv),r=cd.total_6468>0?(cd.sex[sx]||0)/cd.total_6468:0;
+  return Math.round(lt*r);
+}
+
+function getActive(){
+  var reg=document.getElementById("f-region").value;
+  var col=document.getElementById("f-col").value;
+  var lv=document.getElementById("f-lv").value;
+  var yfrom=document.getElementById("f-yfrom").value;
+  var yto=document.getElementById("f-yto").value;
+  var allYrs=V2.meta.all_years;
+  var i0=allYrs.indexOf(yfrom),i1=allYrs.indexOf(yto);
+  if(i0<0)i0=0; if(i1<0)i1=allYrs.length-1;
+  var yrs=allYrs.slice(Math.min(i0,i1),Math.max(i0,i1)+1);
+  var cols;
+  if(col){cols=[col];}
+  else if(reg){cols=V2.col_data.filter(function(cd){return cd.region===reg;}).map(function(cd){return cd.col;});}
+  else{cols=V2.meta.all_cols.slice();}
+  return {reg:reg,col:col,lv:lv,yrs:yrs,cols:cols};
+}
+
+function newChart(id,type,data,opts){
+  if(CHARTS[id]){try{CHARTS[id].destroy();}catch(e){}}
+  var el=document.getElementById(id);if(!el)return;
+  CHARTS[id]=new Chart(el.getContext("2d"),{type:type,data:data,options:opts});
+}
+
+function drawTrend(cols,yrs,lv){
+  var labels=yrs.map(function(y){return "’"+y;});
+  var ds;
+  if(!lv){
+    ds=LV_ORDER.map(function(k){
+      return{label:k,data:yrs.map(function(yr){
+        return cols.reduce(function(s,c){
+          var cd=COLS[c];if(!cd)return s;
+          if(cd.yr_lv&&cd.yr_lv[yr])return s+(cd.yr_lv[yr][k]||0);
+          var t=cd.by_year[yr]||0,f=cd.total_6468>0?(cd.lv[k]||0)/cd.total_6468:0;
+          return s+Math.round(t*f);
+        },0);
+      }),borderColor:LV_COLORS[k],backgroundColor:LV_COLORS[k]+"44",borderWidth:2,pointRadius:4,fill:false,tension:0.3};
+    });
+  }else{
+    var clr=LV_COLORS[lv]||"#2471a3";
+    ds=[{label:lv,data:yrs.map(function(yr){
+      return cols.reduce(function(s,c){
+        var cd=COLS[c];if(!cd)return s;
+        if(cd.yr_lv&&cd.yr_lv[yr])return s+(cd.yr_lv[yr][lv]||0);
+        var t=cd.by_year[yr]||0,f=cd.total_6468>0?(cd.lv[lv]||0)/cd.total_6468:0;
+        return s+Math.round(t*f);
+      },0);
+    }),borderColor:clr,backgroundColor:clr+"44",borderWidth:2,pointRadius:4,fill:false,tension:0.3}];
+  }
+  newChart("chartTrend","line",{labels:labels,datasets:ds},{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom",labels:{font:{size:11},boxWidth:12,padding:8}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{beginAtZero:true,ticks:{callback:function(v){return v.toLocaleString("th-TH");},font:{size:10}}}}
+  });
+}
+
+function drawDonut(id,labels,vals,colors){
+  var tot=vals.reduce(function(a,b){return a+b;},0);
+  newChart(id,"doughnut",{labels:labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2}]},{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12,padding:6}},
+      tooltip:{callbacks:{label:function(ctx){return ctx.label+": "+fmt(ctx.raw)+" คน ("+pct(ctx.raw,tot)+"%)";}}}}
+  });
+}
+
+function drawLvDonut(cols,yrs,lv){
+  var keys=lv?[lv]:LV_ORDER;
+  var vals=keys.map(function(k){return cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?colTotal(cd,yrs,k):0);},0);});
+  drawDonut("chartLvDonut",keys,vals,keys.map(function(k){return LV_COLORS[k]||"#95a5a6";}));
+}
+
+function drawStDonut(cols,yrs,lv){
+  var av=cols.reduce(function(s,c){var cd=COLS[c];if(!cd)return s;return s+stTotal(cd,yrs,lv,"กำลังศึกษา")+stTotal(cd,yrs,lv,"รักษาสภาพ");},0);
+  var gv=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?stTotal(cd,yrs,lv,"สำเร็จ"):0);},0);
+  var dv=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?stTotal(cd,yrs,lv,"พ้นสภาพ"):0);},0);
+  drawDonut("chartStDonut",["กำลังศึกษา","สำเร็จ","พ้นสภาพ"],[av,gv,dv],[C_ACT,C_GRAD,C_DROP]);
+}
+
+function drawHBar(id,labels,vals,bgs,ttFn){
+  newChart(id,"bar",{labels:labels,datasets:[{label:"นักศึกษา",data:vals,backgroundColor:bgs,borderRadius:3,borderWidth:0}]},{
+    indexAxis:"y",responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{title:ttFn||function(){return "";},label:function(ctx){return fmt(ctx.raw)+" คน";}}}},
+    scales:{x:{ticks:{callback:function(v){return v.toLocaleString("th-TH");},font:{size:10}},grid:{color:"#efefef"}},y:{ticks:{font:{size:11}}}}
+  });
+}
+
+function drawColBar(cols,yrs,lv){
+  var ordData=V2.col_data.filter(function(cd){return cols.indexOf(cd.col)>=0;});
+  var labels=ordData.map(function(cd){return"["+cd.code+"] "+cd.short;});
+  var lvKeys=lv?[lv]:LV_ORDER;
+  var ds=lvKeys.map(function(k){
+    return{label:k,data:ordData.map(function(cd){return colTotal(cd,yrs,k);}),
+      backgroundColor:LV_COLORS[k]||"#95a5a6",borderWidth:0};
+  });
+  newChart("chartColBar","bar",{labels:labels,datasets:ds},{
+    indexAxis:"y",responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12,padding:6}},
+      tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+": "+fmt(ctx.raw)+" คน";},
+        footer:function(items){var tot=items.reduce(function(s,i){return s+(i.raw||0);},0);return"รวม: "+fmt(tot)+" คน";}}}},
+    scales:{x:{stacked:true,ticks:{callback:function(v){return v.toLocaleString("th-TH");},font:{size:10}},grid:{color:"#efefef"}},
+      y:{stacked:true,ticks:{font:{size:11}}}}
+  });
+}
+
+function drawColSt(cols,yrs,lv){
+  var ordData=V2.col_data.filter(function(cd){return cols.indexOf(cd.col)>=0;});
+  var labels=ordData.map(function(cd){return"["+cd.code+"] "+cd.short;});
+  var aD=ordData.map(function(cd){return stTotal(cd,yrs,lv,"กำลังศึกษา")+stTotal(cd,yrs,lv,"รักษาสภาพ");});
+  var gD=ordData.map(function(cd){return stTotal(cd,yrs,lv,"สำเร็จ");});
+  var dD=ordData.map(function(cd){return stTotal(cd,yrs,lv,"พ้นสภาพ");});
+  newChart("chartColSt","bar",{labels:labels,datasets:[
+    {label:"กำลังศึกษา",data:aD,backgroundColor:C_ACT,borderWidth:0},
+    {label:"สำเร็จ",data:gD,backgroundColor:C_GRAD,borderWidth:0},
+    {label:"พ้นสภาพ",data:dD,backgroundColor:C_DROP,borderWidth:0}
+  ]},{
+    indexAxis:"y",responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom",labels:{font:{size:11},boxWidth:12,padding:8}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+": "+fmt(ctx.raw)+" คน";},
+      footer:function(items){var tot=items.reduce(function(s,i){return s+(i.raw||0);},0);return"รวม: "+fmt(tot)+" คน";}}}},
+    scales:{x:{stacked:true,ticks:{callback:function(v){return v.toLocaleString("th-TH");},font:{size:10}}},y:{stacked:true,ticks:{font:{size:11}}}}
+  });
+}
+
+function drawTopProg(cols,yrs,lv){
+  var progs=V2.grouped_progs;
+  var labels=progs.map(function(p){return p.name.length>24?p.name.slice(0,24)+"…":p.name;});
+  newChart("chartTopProg","bar",{labels:labels,datasets:[
+    {label:"อนุปริญญา 3 ปี",data:progs.map(function(p){return p.anu3||0;}),backgroundColor:"#1a3a5c",borderWidth:0,borderRadius:2},
+    {label:"อนุปริญญา 2 ปี",data:progs.map(function(p){return p.anu2||0;}),backgroundColor:"#5b9bd5",borderWidth:0,borderRadius:2},
+    {label:"ปวส.",data:progs.map(function(p){return p.pvs||0;}),backgroundColor:"#e67e22",borderWidth:0,borderRadius:2},
+    {label:"ปวช.",data:progs.map(function(p){return p.pvc||0;}),backgroundColor:"#8e44ad",borderWidth:0,borderRadius:2}
+  ]},{
+    indexAxis:"y",responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom",labels:{font:{size:10},boxWidth:12,padding:6}},
+      tooltip:{callbacks:{
+        label:function(ctx){return ctx.dataset.label+": "+fmt(ctx.raw)+" คน";},
+        footer:function(items){var tot=items.reduce(function(s,i){return s+(i.raw||0);},0);return"รวม: "+fmt(tot)+" คน";}}}},
+    scales:{x:{stacked:true,ticks:{callback:function(v){return v.toLocaleString("th-TH");},font:{size:10}},grid:{color:"#efefef"}},
+      y:{stacked:true,ticks:{font:{size:11}}}}
+  });
+}
+
+function drawGradAnalysis(){
+  var a=getActive();
+  var selCols=a.cols;  // filter: region + college only
+  var GRAD_YRS=["2564","2565","2566","2567","2568"];
+  var LK_MAP={
+    "T6":["อนุปริญญา","tbl-grad-t6","sub-grad-t6","card-grad-t6"],
+    "T7":["ปวส.","tbl-grad-t7","sub-grad-t7","card-grad-t7"],
+    "T8":["ปวช.","tbl-grad-t8","sub-grad-t8","card-grad-t8"]
+  };
+  // Always show all 3 tables (level filter does NOT hide/filter these tables)
+
+  Object.keys(LK_MAP).forEach(function(lk){
+    var info=LK_MAP[lk];
+    var card=document.getElementById(info[3]);
+    if(card)card.style.display="";
+
+    var tbData=V2.grad_tables[lk]||{};
+
+    // FIXED columns: all entry years across full dataset (not filtered)
+    var fixedSet={};
+    Object.keys(tbData).forEach(function(col){
+      Object.keys(tbData[col]).forEach(function(gy){
+        Object.keys(tbData[col][gy]).forEach(function(ey){fixedSet[ey]=1;});
+      });
+    });
+    var fixedYrs=Object.keys(fixedSet).sort(function(x,y){return parseInt(x)-parseInt(y);});
+
+    // DATA: aggregate by selected colleges only (no year/level filter)
+    var agg={};
+    selCols.forEach(function(col){
+      var cd=tbData[col];if(!cd)return;
+      Object.keys(cd).forEach(function(gy){
+        if(!agg[gy])agg[gy]={};
+        Object.keys(cd[gy]).forEach(function(ey){
+          agg[gy][ey]=(agg[gy][ey]||0)+cd[gy][ey];
+        });
+      });
+    });
+
+    // Build table with fixed headers, data from selected colleges
+    var grandTotal=0;
+    var html2="<table class='gtbl'><thead><tr><th>ปีที่สำเร็จ</th>";
+    fixedYrs.forEach(function(ey){html2+="<th>รับเข้า '"+ey+"</th>";});
+    html2+="<th>รวม</th></tr></thead><tbody>";
+
+    GRAD_YRS.forEach(function(gy){
+      var rowTot=0;
+      var cells=fixedYrs.map(function(ey){var v=(agg[gy]||{})[ey]||0;rowTot+=v;return v;});
+      grandTotal+=rowTot;
+      var rowMax=cells.reduce(function(mx,v){return v>mx?v:mx;},0);
+      html2+="<tr><td class='lbl'>'"+String(parseInt(gy)-2500)+" ("+gy+")</td>";
+      cells.forEach(function(v){
+        var cls=v===0?"zero":(v===rowMax?"peak":"");
+        html2+="<td class='"+cls+"'>"+(v>0?fmt(v):"-")+"</td>";
+      });
+      html2+="<td class='lbl'>"+fmt(rowTot)+"</td></tr>";
+    });
+
+    // Total row
+    html2+="<tr class='tot-row'><td class='lbl'>รวมทั้งหมด</td>";
+    fixedYrs.forEach(function(ey){
+      var ct=GRAD_YRS.reduce(function(s,gy){return s+((agg[gy]||{})[ey]||0);},0);
+      html2+="<td>"+(ct>0?fmt(ct):"-")+"</td>";
+    });
+    html2+="<td>"+fmt(grandTotal)+"</td></tr></tbody></table>";
+
+    document.getElementById(info[1]).innerHTML=html2;
+    var colDesc=selCols.length===V2.meta.all_cols.length?"ทุกวิทยาลัย (21 แห่ง)":selCols.length+" วิทยาลัย";
+    document.getElementById(info[2]).textContent=
+      info[0]+" | "+colDesc+" | ปีสำเร็จ '64–'68 | รวม "+fmt(grandTotal)+" คน";
+  });
+}
+
+function drawRegion(cols,yrs,lv){
+  var regs=V2.meta.region_order;
+  var vals=regs.map(function(r){
+    return cols.filter(function(c){return COLS[c]&&COLS[c].region===r;}).reduce(function(s,c){return s+colTotal(COLS[c],yrs,lv);},0);
+  });
+  drawDonut("chartRegion",regs,vals,regs.map(function(r){return REG_COLORS[r]||"#95a5a6";}));
+}
+
+function drawGender(cols,yrs,lv){
+  var f=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?sexTot(cd,yrs,lv,"F"):0);},0);
+  var m=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?sexTot(cd,yrs,lv,"M"):0);},0);
+  drawDonut("chartGender",["หญิง","ชาย"],[f,m],[C_FEM,C_MAL]);
+}
+
+function applyFilters(){
+  try{
+    var a=getActive();
+    var cols=a.cols,yrs=a.yrs,lv=a.lv,col=a.col,reg=a.reg;
+    var grand=V2.col_data.reduce(function(s,cd){return s+cd.total_6468;},0);
+    var gSt={},gF=0;
+    V2.col_data.forEach(function(cd){
+      Object.keys(cd.st).forEach(function(k){gSt[k]=(gSt[k]||0)+cd.st[k];});
+      gF+=(cd.sex["F"]||0);
+    });
+    var tot=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?colTotal(cd,yrs,lv):0);},0);
+    var actN=cols.reduce(function(s,c){var cd=COLS[c];if(!cd)return s;return s+stTotal(cd,yrs,lv,"กำลังศึกษา")+stTotal(cd,yrs,lv,"รักษาสภาพ");},0);
+    var graN=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?stTotal(cd,yrs,lv,"สำเร็จ"):0);},0);
+    var drpN=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?stTotal(cd,yrs,lv,"พ้นสภาพ"):0);},0);
+    var femN=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?sexTot(cd,yrs,lv,"F"):0);},0);
+    var malN=cols.reduce(function(s,c){var cd=COLS[c];return s+(cd?sexTot(cd,yrs,lv,"M"):0);},0);
+    var isFilt=(yrs.length!==5||cols.length!==V2.meta.all_cols.length||!!lv);
+    function sk(idx,val,gv){
+      document.getElementById("kv"+idx).textContent=fmt(val);
+      document.getElementById("kf"+idx).textContent=isFilt&&gv?"จาก "+fmt(gv)+" คน ("+pct(val,gv)+"%)":"";
+    }
+    sk(0,tot,grand);sk(1,actN,(gSt["กำลังศึกษา"]||0)+(gSt["รักษาสภาพ"]||0));
+    sk(2,graN,gSt["สำเร็จ"]||0);
+    sk(3,drpN,gSt["พ้นสภาพ"]||0);
+    var fp=pct(femN,femN+malN);
+    document.getElementById("kv4").textContent=fp+"%";
+    document.getElementById("kf4").textContent=isFilt?"หญิง "+fmt(femN)+" ชาย "+fmt(malN):"";
+    var yl=yrs.length===1?"’2"+yrs[0]:"’2"+yrs[0]+"–’2"+yrs[yrs.length-1];
+    var cl=col?"["+COLS[col].code+"] "+COLS[col].short:(reg||"ทุกวิทยาลัย");
+    document.getElementById("hdr-sub").textContent="ปีการศึกษา 25"+yl+" | "+cl+(lv?" | "+lv:"");
+    document.getElementById("fstat").textContent="รวม "+fmt(tot)+" คน | "+cols.length+" วิทยาลัย";
+    drawTrend(cols,yrs,lv);
+    drawLvDonut(cols,yrs,lv);
+    drawStDonut(cols,yrs,lv);
+    drawColBar(cols,yrs,lv);
+    drawColSt(cols,yrs,lv);
+    drawTopProg(cols,yrs,lv);
+    drawGradAnalysis();
+    drawRegion(cols,yrs,lv);
+    drawGender(cols,yrs,lv);
+  }catch(err){console.error("applyFilters error:",err.message,err.stack);}
+}
+
+function updateColOpts(){
+  var reg=document.getElementById("f-region").value;
+  var sel=document.getElementById("f-col");
+  sel.innerHTML='<option value="">ทุกวิทยาลัย</option>';
+  var list=reg?V2.col_data.filter(function(cd){return cd.region===reg;}):V2.col_data;
+  list.forEach(function(cd){
+    var o=document.createElement("option");
+    o.value=cd.col;o.textContent="["+cd.code+"] "+cd.short;
+    sel.appendChild(o);
+  });
+}
+
+function resetFilters(){
+  document.getElementById("f-region").value="";
+  document.getElementById("f-lv").value="";
+  document.getElementById("f-yfrom").value="64";
+  document.getElementById("f-yto").value="68";
+  updateColOpts();
+  applyFilters();
+}
+
+(function init(){
+  var yfrom=document.getElementById("f-yfrom");
+  var yto=document.getElementById("f-yto");
+  V2.meta.all_years.forEach(function(yr){
+    var o1=document.createElement("option");o1.value=yr;o1.textContent="ปีการศึกษา 25"+yr;yfrom.appendChild(o1);
+    var o2=document.createElement("option");o2.value=yr;o2.textContent="ปีการศึกษา 25"+yr;yto.appendChild(o2);
+  });
+  yfrom.value="64";yto.value="68";
+  updateColOpts();
+  document.getElementById("f-region").addEventListener("change",function(){updateColOpts();applyFilters();});
+  document.getElementById("f-col").addEventListener("change",applyFilters);
+  document.getElementById("f-lv").addEventListener("change",applyFilters);
+  yfrom.addEventListener("change",applyFilters);
+  yto.addEventListener("change",applyFilters);
+  applyFilters();
+})();
+</script>
+</body>
+</html>

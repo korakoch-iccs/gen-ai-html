@@ -1,32 +1,121 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background-color: #f4f6f9;
-  }
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICCS Gen-AI Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #f4f6f9;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px 12px;
+      background: #ffffff;
+      border-bottom: 1px solid #dfe5ef;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      z-index: 1;
+    }
+
+    .tab-button {
+      border: 1px solid #dfe5ef;
+      background: #f6f8fb;
+      color: #1f2937;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .tab-button:hover {
+      background: #edf3ff;
+      border-color: #bfd1ff;
+    }
+
+    .tab-button.active {
+      background: #482c77;
+      border-color: #482c77;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2);
+    }
+
+    .content {
+      flex: 1;
+      min-height: 0;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #ffffff;
+    }
+  </style>
 </head>
 <body>
+  <div class="tab-bar" id="tabBar"></div>
+  <div class="content">
+    <iframe id="pageFrame" title="ICCS page"></iframe>
+  </div>
 
-  <!-- Replace "dashboard.html" with the actual filename of your provided file -->
-  <iframe src="ICCS-GenAI-Dashboard_4.html" title="Dashboard Gen-AI"></iframe>
+  <script>
+    const pages = [
+      { label: 'Dashboard', file: 'ICCS-GenAI-Dashboard_4.html' },
+      { label: 'ข้อมูลนักศึกษา', file: 'ข้อมูลนักศึกษา สถาบันวิทยาลัยชุมชน.html' },
+      { label: 'ข้อมูลสารสนเทศ', file: 'ข้อมูลสารสนเทศของนักศึกษา.html' },
+      { label: 'สถิติ ThaiMOOC', file: 'สถิติการใช้งาน ICCS ThaiMOOC.html' }
+    ];
 
+    const tabBar = document.getElementById('tabBar');
+    const pageFrame = document.getElementById('pageFrame');
+
+    pages.forEach((page, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'tab-button';
+      button.textContent = page.label;
+      button.setAttribute('aria-label', 'Open ' + page.label);
+      button.addEventListener('click', () => loadPage(index));
+      tabBar.appendChild(button);
+    });
+
+    function loadPage(index) {
+      const page = pages[index];
+      if (!page) return;
+
+      const buttons = document.querySelectorAll('.tab-button');
+      buttons.forEach((button, buttonIndex) => {
+        button.classList.toggle('active', buttonIndex === index);
+      });
+
+      pageFrame.src = encodeURI(page.file);
+      pageFrame.title = page.label;
+    }
+
+    loadPage(0);
+  </script>
 </body>
 </html>
