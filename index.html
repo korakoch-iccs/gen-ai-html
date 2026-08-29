@@ -113,12 +113,21 @@
     <div class="loading-overlay" id="loadingOverlay" aria-live="polite" aria-label="Loading page">
       <div class="spinner" aria-hidden="true"></div>
     </div>
-    <iframe id="pageFrame" title="ICCS page"></iframe>
+    <iframe
+      id="pageFrame"
+      title="ICCS page"
+      width="600"
+      height="100%"
+      frameborder="0"
+      style="border:0"
+      allowfullscreen
+      sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+    ></iframe>
   </div>
 
   <script>
     const pages = [
-      { label: 'Dashboard', file: 'ICCS-GenAI-Dashboard_4.html' },
+      { label: 'Dashboard', file: 'https://lookerstudio.google.com/embed/reporting/ff35ed5e-ff75-428b-8123-dc1c42be584d/page/FeNYF' },
       { label: 'ข้อมูลนักศึกษา', file: 'ข้อมูลนักศึกษา สถาบันวิทยาลัยชุมชน.html' },
       { label: 'ข้อมูลสารสนเทศ', file: 'ข้อมูลสารสนเทศของนักศึกษา.html' },
       { label: 'สถิติ ThaiMOOC', file: 'สถิติการใช้งาน ICCS ThaiMOOC.html' }
